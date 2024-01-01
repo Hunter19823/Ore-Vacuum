@@ -1,0 +1,97 @@
+plugins {
+    id 'me.shedaniel.unified-publishing'
+}
+var loader = "forge"
+var Loader = "Forge"
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+}
+
+loom {
+    forge {
+        mixinConfigs(
+            "${mod_id}.mixins.json",
+            "${mod_id}-common.mixins.json",
+        )
+    }
+
+    interfaceInjection {
+        interfaceInjectionSourceSets.add project(':common').sourceSets.main
+    }
+}
+
+dependencies {
+    forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury-${loader}:${rootProject.architectury_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title"     : project.mod_id,
+            "Specification-Vendor"    : project.mod_author,
+            "Specification-Version"   : "1",
+            "Implementation-Title"    : project.name,
+            "Implementation-Version"  : version,
+            "Implementation-Vendor"   : project.mod_author,
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+unifiedPublishing {
+    project {
+        releaseType = project.upload_type
+        gameVersions = [
+            project.minecraft_version
+        ]
+        gameLoaders = ["${loader}"]
+        displayName = "$mod_name ${Loader} $project.version"
+
+        mainPublication remapJar
+
+        relations {
+            depends {
+//				curseforge = modrinth = "architectury-api"
+            }
+            depends {
+//				curseforge = modrinth = "kubejs"
+            }
+        }
+
+        if (ENV.CURSEFORGE_KEY && project.curseforge_id) {
+            curseforge {
+                token = ENV.CURSEFORGE_KEY
+                id = project.curseforge_id
+            }
+        }
+
+        if (ENV.MODRINTH_TOKEN && project.modrinth_id) {
+            modrinth {
+                token = ENV.MODRINTH_TOKEN
+                id = project.modrinth_id
+                version = "${mod_id}-${loader}-${mod_version}"
+            }
+        }
+    }
+}
