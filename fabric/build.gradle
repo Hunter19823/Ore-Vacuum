@@ -1,0 +1,82 @@
+plugins {
+    id 'me.shedaniel.unified-publishing'
+}
+
+var loader = "fabric"
+var Loader = "Fabric"
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+    configureEach {
+        resolutionStrategy {
+            force "net.fabricmc:fabric-loader:${fabric_loader_version}"
+        }
+    }
+}
+
+loom {
+
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}+${rootProject.minecraft_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
+
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+
+unifiedPublishing {
+    project {
+        releaseType = project.upload_type
+        gameVersions = [
+            project.minecraft_version
+        ]
+        gameLoaders = ["${loader}"]
+        displayName = "$mod_name ${Loader} $project.version"
+
+        mainPublication remapJar
+
+        relations {
+            depends {
+//				 curseforge = modrinth = "architectury-api"
+            }
+            depends {
+//				 curseforge = modrinth = "kubejs"
+            }
+        }
+
+        if (ENV.CURSEFORGE_KEY && project.curseforge_id) {
+            curseforge {
+                token = ENV.CURSEFORGE_KEY
+                id = project.curseforge_id
+            }
+        }
+
+        if (ENV.MODRINTH_TOKEN && project.modrinth_id) {
+            modrinth {
+                token = ENV.MODRINTH_TOKEN
+                id = project.modrinth_id
+                version = "${mod_id}-${loader}-${mod_version}"
+            }
+        }
+    }
+}
