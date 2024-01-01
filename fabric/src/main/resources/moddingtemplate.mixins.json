@@ -1,0 +1,13 @@
+{
+    "required": false,
+    "minVersion": "${mixin_min_version}",
+    "package": "${maven_group}.${mod_id}.fabric.mixin",
+    "compatibilityLevel": "JAVA_${java_version}",
+    "mixins": [
+    ],
+    "client": [
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}
