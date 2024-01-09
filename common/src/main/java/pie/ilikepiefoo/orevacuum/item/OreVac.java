@@ -2,14 +2,21 @@ package pie.ilikepiefoo.orevacuum.item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Vector3i;
 import pie.ilikepiefoo.orevacuum.BlockCalculations;
+import pie.ilikepiefoo.orevacuum.api.SuctionEvent;
 import pie.ilikepiefoo.orevacuum.registry.Tags;
 
 import java.util.List;
@@ -31,31 +38,53 @@ public class OreVac extends Item {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext context) {
-        var player = context.getPlayer();
-        if (player == null) {
-            return InteractionResult.FAIL;
+    public void onUseTick(Level level, LivingEntity livingEntity, ItemStack itemStack, int i) {
+        if (livingEntity instanceof Player) {
+            var event = SuctionEvent.create(level, (Player) livingEntity, InteractionHand.MAIN_HAND, itemStack);
+            activate(event);
         }
-        Vector3i eyePositionVec3i = new Vector3i((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
-        var lookAngle = player.getRotationVector();
+    }
+
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        var event = SuctionEvent.of(context);
+
+        if (activate(event)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        return InteractionResult.FAIL;
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
+        var event = SuctionEvent.create(level, player, interactionHand, player.getItemInHand(interactionHand));
+
+        if (activate(event)) {
+            return InteractionResultHolder.success(player.getItemInHand(interactionHand));
+        }
+
+        return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+    }
+
+    public boolean activate(SuctionEvent event) {
+        Vector3i eyePositionVec3i = new Vector3i((int) event.player().getX(), (int) event.player().getEyeY(), (int) event.player().getZ());
+        var lookAngle = event.player().getRotationVector();
 
         int pitch = BlockCalculations.snapToAngle(lookAngle.x, SNAP_ANGLE);
         int yaw = BlockCalculations.snapToAngle(lookAngle.y, SNAP_ANGLE);
 
         for (int i = 0; i < this.pyramidBase.size(); i++) {
             BlockCalculations.projectPoints(pitch, yaw, i, eyePositionVec3i, this.pyramidBase.get(i))
-                .forEach((position) -> suckUp(position, context));
+                .forEach((position) -> suckUp(position, event));
         }
-        return InteractionResult.SUCCESS;
+
+        return true;
     }
 
-    public boolean suckUp(Vec3i position, UseOnContext context) {
-        if (context.getPlayer() == null) {
-            LOG.error("Player is null on Sucking action! This should not happen!");
-            return false;
-        }
+    public boolean suckUp(Vec3i position, SuctionEvent context) {
         BlockPos blockPos = new BlockPos(position);
-        BlockState blockState = context.getLevel().getBlockState(blockPos);
+        BlockState blockState = context.level().getBlockState(blockPos);
 
         // Destroy the ore block
         if (!isOre(blockState)) {
@@ -63,11 +92,12 @@ public class OreVac extends Item {
         }
 
         // Destroy the ore block
-        context.getLevel().destroyBlock(blockPos, true);
+//        context.level().setBlock(blockPos, Blocks.GLASS.defaultBlockState(), 3);
+        context.level().destroyBlock(blockPos, true);
 
         // Damage the OreVac
-        if (!context.getPlayer().isCreative()) {
-            context.getItemInHand().hurtAndBreak(1, context.getPlayer(), (entity) -> entity.broadcastBreakEvent(context.getHand()));
+        if (!context.player().isCreative()) {
+            context.stack().hurtAndBreak(1, context.player(), (entity) -> entity.broadcastBreakEvent(context.hand()));
         }
 
         return true;

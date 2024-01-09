@@ -12,7 +12,7 @@ import static pie.ilikepiefoo.orevacuum.item.OreVac.ORE_VAC_PROPERTIES;
 public class Items {
     // Using minecraft architectury, register a new instance of the OreVac item.
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(OreVacuum.MOD_ID, Registries.ITEM);
-    public static final RegistrySupplier<OreVac> ORE_VAC_ITEM = ITEMS.register("ore_vacuum", () -> new OreVac(ORE_VAC_PROPERTIES, 5));
+    public static final RegistrySupplier<OreVac> ORE_VAC_ITEM = ITEMS.register("ore_vacuum", () -> new OreVac(ORE_VAC_PROPERTIES, 10));
 
     public static void init() {
         ITEMS.register();
