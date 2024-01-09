@@ -24,35 +24,35 @@ public class BlockCalculations {
         // The pyramid layer will be (2*radius+1) blocks long.
 
         // Start by creating a base layer that is at 0,0,0 that is (2*radius+1) blocks wide and long.
-        for(int x=0; x<=radius; x++) {
-            for(int z=0; z<=radius; z++) {
+        for (int x = 0; x <= radius; x++) {
+            for (int z = 0; z <= radius; z++) {
                 if (x == 0 && z == 0) {
                     positions.add(new Vec3i(0, 0, 0));
                     continue;
                 }
                 if (x == 0) {
-                    positions.add(new Vec3i(0,0,z));
-                    positions.add(new Vec3i(0,0,-z));
+                    positions.add(new Vec3i(0, 0, z));
+                    positions.add(new Vec3i(0, 0, -z));
                     continue;
                 }
                 if (z == 0) {
-                    positions.add(new Vec3i(x,0,0));
-                    positions.add(new Vec3i(-x,0,0));
+                    positions.add(new Vec3i(x, 0, 0));
+                    positions.add(new Vec3i(-x, 0, 0));
                     continue;
                 }
                 // Add the 4 corners of the layer
-                positions.add(new Vec3i(x,0,z));
-                positions.add(new Vec3i(-x,0,z));
-                positions.add(new Vec3i(x,0,-z));
-                positions.add(new Vec3i(-x,0,-z));
+                positions.add(new Vec3i(x, 0, z));
+                positions.add(new Vec3i(-x, 0, z));
+                positions.add(new Vec3i(x, 0, -z));
+                positions.add(new Vec3i(-x, 0, -z));
             }
         }
 
         // Calculate the rotation matrix
         var rotationMatrix = new Matrix3d();
         rotationMatrix.rotateX(0);
-        rotationMatrix.rotateY(Math.toRadians(90-directionVector.y));
-        rotationMatrix.rotateZ(Math.toRadians(directionVector.x-90));
+        rotationMatrix.rotateY(Math.toRadians(90 - directionVector.y));
+        rotationMatrix.rotateZ(Math.toRadians(directionVector.x - 90));
 
         // Apply rotation to each point in the pyramid layer
         return positions.build().map(vec3i -> {
@@ -60,7 +60,7 @@ public class BlockCalculations {
                 .transform(new Vector3d(vec3i.getX(), -distance, vec3i.getZ()));
             var newTransform = transform
                 .add(eyePosition.x, eyePosition.y, eyePosition.z);
-            return new Vec3i((int)Math.round(newTransform.x), (int) Math.round(newTransform.y), (int) Math.round(newTransform.z));
+            return new Vec3i((int) Math.round(newTransform.x), (int) Math.round(newTransform.y), (int) Math.round(newTransform.z));
         }).distinct();
     }
 
