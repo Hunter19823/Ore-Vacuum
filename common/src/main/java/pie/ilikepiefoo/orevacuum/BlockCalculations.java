@@ -1,16 +1,69 @@
 package pie.ilikepiefoo.orevacuum;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Matrix3d;
 import org.joml.Vector3d;
+import org.joml.Vector3i;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class BlockCalculations {
     private static final Logger LOG = LogManager.getLogger();
+
+    public static List<Vector3i[]> createPyramid(int height) {
+        ArrayList<Vector3i[]> pyramid = new ArrayList<>();
+        for (int i = 0; i < height; i++) {
+            pyramid.add(calculatePyramidBase(i));
+        }
+        pyramid.trimToSize();
+        return pyramid;
+    }
+
+    public static Vector3i[] calculatePyramidBase(int range) {
+        var positions = new ArrayList<Vector3i>();
+        int index = 0;
+        positions.add(new Vector3i(0, 0, 0));
+        for (int x = 1; x < range; x++) {
+            positions.add(new Vector3i(x, 0, 0));
+            positions.add(new Vector3i(-x, 0, 0));
+        }
+        for (int z = 1; z < range; z++) {
+            positions.add(new Vector3i(0, 0, z));
+            positions.add(new Vector3i(0, 0, -z));
+        }
+        for (int x = 1; x < range; x++) {
+            for (int z = 1; z < range; z++) {
+                positions.add(new Vector3i(x, 0, z));
+                positions.add(new Vector3i(-x, 0, z));
+                positions.add(new Vector3i(x, 0, -z));
+                positions.add(new Vector3i(-x, 0, -z));
+            }
+        }
+        var output = positions.toArray(new Vector3i[0]);
+        positions.clear();
+        return output;
+    }
+
+    public static Stream<BlockPos> projectPoints(int pitch, int yaw, int distanceFromOffset, Vector3i offset, Vector3i[] points) {
+        var rotationMatrix = new Matrix3d();
+        rotationMatrix.rotateX(0);
+        rotationMatrix.rotateY(Math.toRadians(90 - yaw));
+        rotationMatrix.rotateZ(Math.toRadians(pitch - 90));
+
+        return Stream.of(points).map(vec3i -> {
+            var transform = rotationMatrix
+                .transform(new Vector3d(vec3i.x, -distanceFromOffset, vec3i.z))
+                .add(offset.x, offset.y, offset.z)
+                .round();
+            return new BlockPos((int) transform.x, (int) transform.y, (int) transform.z);
+        });
+    }
 
     public static Stream<Vec3i> calculatePyramidLayer(Vec3 eyePosition, Vec3 directionVector, int distance, int radius) {
         Stream.Builder<Vec3i> positions = Stream.builder();
@@ -64,7 +117,7 @@ public class BlockCalculations {
         }).distinct();
     }
 
-    public static double snapToAngle(double angle, double snapAngle) {
+    public static int snapToAngle(double angle, double snapAngle) {
         // Ensure the snapAngle is between 0 and 360 degrees
         snapAngle = snapAngle % 360;
 
@@ -73,9 +126,9 @@ public class BlockCalculations {
 
         // Adjust the angle to snap to the nearest multiple of snapAngle
         if (remainder < snapAngle / 2) {
-            return angle - remainder;
+            return (int) (angle - remainder);
         } else {
-            return angle + (snapAngle - remainder);
+            return (int) (angle + (snapAngle - remainder));
         }
     }
 

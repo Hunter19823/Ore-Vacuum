@@ -2,18 +2,17 @@ package pie.ilikepiefoo.orevacuum.item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joml.Vector3i;
 import pie.ilikepiefoo.orevacuum.BlockCalculations;
 import pie.ilikepiefoo.orevacuum.registry.Tags;
+
+import java.util.List;
 
 public class OreVac extends Item {
     public static final Logger LOG = LogManager.getLogger();
@@ -21,31 +20,42 @@ public class OreVac extends Item {
         .stacksTo(1)
         .defaultDurability(1000)
         .fireResistant();
+    private static final int SNAP_ANGLE = 15;
     public int range;
+    private final List<Vector3i[]> pyramidBase;
 
     public OreVac(Properties properties, int range) {
         super(properties);
         this.range = range;
+        this.pyramidBase = BlockCalculations.createPyramid(range);
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
-        var eyePosition = player.getEyePosition();
+    public InteractionResult useOn(UseOnContext context) {
+        var player = context.getPlayer();
+        if (player == null) {
+            return InteractionResult.FAIL;
+        }
+        Vector3i eyePositionVec3i = new Vector3i((int) player.getX(), (int) player.getEyeY(), (int) player.getZ());
         var lookAngle = player.getRotationVector();
 
-        var correctedLookAngle = new Vec3(BlockCalculations.snapToAngle(lookAngle.x, 15), BlockCalculations.snapToAngle(lookAngle.y, 30), 0);
+        int pitch = BlockCalculations.snapToAngle(lookAngle.x, SNAP_ANGLE);
+        int yaw = BlockCalculations.snapToAngle(lookAngle.y, SNAP_ANGLE);
 
-        for (int i = 1; i < range; i++) {
-            BlockCalculations.calculatePyramidLayer(eyePosition, correctedLookAngle, i, i + 3)
-                .forEach((position) -> suckUp(position, level, player, interactionHand));
+        for (int i = 0; i < this.pyramidBase.size(); i++) {
+            BlockCalculations.projectPoints(pitch, yaw, i, eyePositionVec3i, this.pyramidBase.get(i))
+                .forEach((position) -> suckUp(position, context));
         }
-
-        return InteractionResultHolder.success(player.getItemInHand(interactionHand));
+        return InteractionResult.SUCCESS;
     }
 
-    public boolean suckUp(Vec3i position, Level level, Player player, InteractionHand interactionHand) {
+    public boolean suckUp(Vec3i position, UseOnContext context) {
+        if (context.getPlayer() == null) {
+            LOG.error("Player is null on Sucking action! This should not happen!");
+            return false;
+        }
         BlockPos blockPos = new BlockPos(position);
-        BlockState blockState = level.getBlockState(blockPos);
+        BlockState blockState = context.getLevel().getBlockState(blockPos);
 
         // Destroy the ore block
         if (!isOre(blockState)) {
@@ -53,11 +63,11 @@ public class OreVac extends Item {
         }
 
         // Destroy the ore block
-        level.destroyBlock(blockPos, true);
+        context.getLevel().destroyBlock(blockPos, true);
 
         // Damage the OreVac
-        if (!player.isCreative()) {
-            player.getItemInHand(interactionHand).hurtAndBreak(1, player, (entity) -> entity.broadcastBreakEvent(interactionHand));
+        if (!context.getPlayer().isCreative()) {
+            context.getItemInHand().hurtAndBreak(1, context.getPlayer(), (entity) -> entity.broadcastBreakEvent(context.getHand()));
         }
 
         return true;
