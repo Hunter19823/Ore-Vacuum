@@ -16,11 +16,11 @@ import pie.ilikepiefoo.orevacuum.BlockCalculations;
 import pie.ilikepiefoo.orevacuum.registry.Tags;
 
 public class OreVac extends Item {
+    public static final Logger LOG = LogManager.getLogger();
     public static final Properties ORE_VAC_PROPERTIES = new Properties()
         .stacksTo(1)
         .defaultDurability(1000)
         .fireResistant();
-    public static final Logger LOG = LogManager.getLogger();
     public int range;
 
     public OreVac(Properties properties, int range) {
