@@ -132,4 +132,40 @@ public class BlockCalculations {
         }
     }
 
+    public static BlockPos blockPosFrom(Vector3i vector3i) {
+        return new BlockPos(vector3i.x, vector3i.y, vector3i.z);
+    }
+
+    public static Vec3 findClosestCorner(Vec3 player, BlockPos block) {
+        // The goal is to find the closest corner of the block to the player position.
+        // The player position is a point in 3D space.
+        // The block position within a cube that makes up a 1 block wide, 1 block tall, and 1 block long location.
+        // The block position itself is a point in 3D space.
+        // Two opposite corners of the block can be calculated by doing:
+        // floor(block.x), floor(block.y), floor(block.z)
+        // floor(block.x) + 1, floor(block.y) + 1, floor(block.z) + 1
+        // This would give you the diagonal corners of the block, but we want the closest corner to the player.
+        // To find the closest corner, we just need to find the closest x, y, and z values from the player position
+        // to these two corners.
+
+        // Calculate the two corners of the block
+        int cornerX1 = block.getX();
+        int cornerY1 = block.getY();
+        int cornerZ1 = block.getZ();
+
+        int cornerX2 = cornerX1 + 1;
+        int cornerY2 = cornerY1 + 1;
+        int cornerZ2 = cornerZ1 + 1;
+
+        int closestX = closest(player.x, cornerX1, cornerX2);
+        int closestY = closest(player.y, cornerY1, cornerY2);
+        int closestZ = closest(player.z, cornerZ1, cornerZ2);
+
+        return new Vec3(closestX, closestY, closestZ);
+    }
+
+    public static int closest(double base, int a, int b) {
+        return (Math.abs(base - a) < Math.abs(base - b)) ? a : b;
+    }
+
 }

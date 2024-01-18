@@ -2,6 +2,7 @@ package pie.ilikepiefoo.orevacuum.item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -10,7 +11,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,22 +74,69 @@ public class OreVac extends Item {
 
     public boolean activate(SuctionEvent event) {
         Vector3i eyePositionVec3i = new Vector3i((int) event.player().getX(), (int) event.player().getEyeY(), (int) event.player().getZ());
+        BlockPos eyePosition = BlockCalculations.blockPosFrom(eyePositionVec3i);
         var lookAngle = event.player().getRotationVector();
 
         int pitch = BlockCalculations.snapToAngle(lookAngle.x, SNAP_ANGLE);
         int yaw = BlockCalculations.snapToAngle(lookAngle.y, SNAP_ANGLE);
 
-        for (int i = 0; i < this.pyramidBase.size(); i++) {
-            BlockCalculations.projectPoints(pitch, yaw, i, eyePositionVec3i, this.pyramidBase.get(i))
-                .forEach((position) -> suckUp(position, event));
+        if (event.player().isCrouching()) {
+            for (int i = this.pyramidBase.size() - 1; i >= 0; i--) {
+                BlockCalculations.projectPoints(pitch, yaw, i, eyePositionVec3i, this.pyramidBase.get(i))
+                    .sorted((a, b) -> (int) (b.distSqr(eyePosition) - a.distSqr(eyePosition)))
+                    .forEach((position) -> extract(event, position, eyePosition));
+            }
+            event.player().getCooldowns().addCooldown(this, 10);
+        } else {
+            for (int i = 0; i < this.pyramidBase.size(); i++) {
+                BlockCalculations.projectPoints(pitch, yaw, i, eyePositionVec3i, this.pyramidBase.get(i))
+                    .sorted((a, b) -> (int) (a.distSqr(eyePosition) - b.distSqr(eyePosition)))
+                    .forEach((position) -> extract(event, position, eyePosition));
+            }
+            event.player().getCooldowns().addCooldown(this, 2);
         }
 
+
         return true;
+    }
+
+    private void extract(SuctionEvent event, BlockPos position, BlockPos eyePosition) {
+        if (event.level().getBlockState(position).isAir()) {
+            return;
+        }
+        if (canExtract(event, position, eyePosition)) {
+            suckUp(position, event);
+        }
+    }
+
+    private boolean canExtract(SuctionEvent event, BlockPos position, BlockPos eyePosition) {
+        if (position.equals(eyePosition)) {
+            return true;
+        }
+        if ((int) position.distSqr(eyePosition) == 1) {
+            return true;
+        }
+        var clipResult = event.level().clip(
+            new ClipContext(
+                event.playerEyePosition(),
+                BlockCalculations.findClosestCorner(event.playerEyePosition(), position),
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                event.player()
+            )
+        );
+        return clipResult.getLocation().distanceTo(position.getCenter()) < 1.5;
     }
 
     public boolean suckUp(Vec3i position, SuctionEvent context) {
         BlockPos blockPos = new BlockPos(position);
         BlockState blockState = context.level().getBlockState(blockPos);
+
+
+        if (context.player().isCrouching()) {
+            context.level().setBlock(blockPos, Blocks.RED_STAINED_GLASS.defaultBlockState(), 3);
+            return true;
+        }
 
         // Destroy the ore block
         if (!isOre(blockState)) {
@@ -92,8 +144,20 @@ public class OreVac extends Item {
         }
 
         // Destroy the ore block
-//        context.level().setBlock(blockPos, Blocks.GLASS.defaultBlockState(), 3);
-        context.level().destroyBlock(blockPos, true);
+        if (context.level().isClientSide()) {
+            return true;
+        }
+        BlockEntity blockEntity = blockState.hasBlockEntity() ? context.level().getBlockEntity(blockPos) : null;
+
+        Block.getDrops(blockState, (ServerLevel) context.level(), blockPos, blockEntity, context.player(), context.stack())
+            .forEach((itemStack) -> {
+                if (context.player().getInventory().add(itemStack)) {
+                    return;
+                }
+                Block.popResource(context.level(), context.player().blockPosition(), itemStack);
+            });
+
+        context.level().setBlockAndUpdate(blockPos, Blocks.AIR.defaultBlockState());
 
         // Damage the OreVac
         if (!context.player().isCreative()) {
