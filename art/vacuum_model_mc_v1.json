@@ -1,7 +1,7 @@
 {
     "credit": "Made with Blockbench",
     "textures": {
-        "0": "orevacuum:item/ore_vacuum",
+        "0": "ore_vacuum",
         "particle": "ore_vacuum"
     },
     "elements": [
