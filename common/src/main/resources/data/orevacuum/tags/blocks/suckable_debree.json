@@ -1,0 +1,16 @@
+{
+    "values": [
+        "#minecraft:mineable/shovel",
+        "#minecraft:dirt",
+        "#minecraft:sand",
+        "#minecraft:saplings",
+        "#minecraft:snow",
+        "minecraft:clay",
+        "minecraft:dripstone_block",
+        "minecraft:sandstone",
+        "minecraft:calcite",
+        "minecraft:gravel",
+        "minecraft:soul_sand",
+        "minecraft:soul_soil"
+    ]
+}

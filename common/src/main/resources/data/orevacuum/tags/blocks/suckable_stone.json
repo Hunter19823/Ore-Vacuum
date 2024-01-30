@@ -1,0 +1,8 @@
+{
+    "values": [
+        "#minecraft:base_stone_overworld",
+        "#minecraft:base_stone_nether",
+        "#minecraft:terracotta",
+        "minecraft:end_stone"
+    ]
+}

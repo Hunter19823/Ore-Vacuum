@@ -1,5 +1,14 @@
 {
     "item.orevacuum.ore_vacuum": "Ore Vacuum",
     "item.orevacuum.tree_vacuum": "Tree Vacuum",
-    "item.orevacuum.plant_vacuum": "Plant Vacuum"
+    "item.orevacuum.plant_vacuum": "Plant Vacuum",
+    "item.orevacuum.debree_vacuum": "Debree Vacuum",
+    "item.orevacuum.stone_vacuum": "Stone Vacuum",
+    "item.orevacuum.fluid_vacuum": "Fluid Vacuum",
+    "item.orevacuum.ore_vacuum.desc": "Vacuums up ores and puts them into the player's inventory.",
+    "item.orevacuum.tree_vacuum.desc": "Vacuums up trees and puts them into the player's inventory.",
+    "item.orevacuum.plant_vacuum.desc": "Vacuums up plants and puts them into the player's inventory.",
+    "item.orevacuum.debree_vacuum.desc": "Vacuums up debree and puts them into the player's inventory.",
+    "item.orevacuum.stone_vacuum.desc": "Vacuums up stone and puts them into the player's inventory.",
+    "item.orevacuum.fluid_vacuum.desc": "Vacuums up fluids."
 }

@@ -19,6 +19,9 @@ public class Items {
     public static final RegistrySupplier<VacuumItem> ORE_VAC_ITEM = ITEMS.register("ore_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_ORES))));
     public static final RegistrySupplier<VacuumItem> TREE_VAC_ITEM = ITEMS.register("tree_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_TREES))));
     public static final RegistrySupplier<VacuumItem> PLANT_VAC_ITEM = ITEMS.register("plant_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_PLANTS))));
+    public static final RegistrySupplier<VacuumItem> DEBREE_VAC_ITEM = ITEMS.register("debree_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_DEBREE))));
+    public static final RegistrySupplier<VacuumItem> STONE_VAC_ITEM = ITEMS.register("stone_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_STONE))));
+    public static final RegistrySupplier<VacuumItem> FLUID_VAC_ITEM = ITEMS.register("fluid_vacuum", () -> new VacuumItemPyramidShaped(DEFAULT_ORE_VAC_PROPERTIES, 10, new DefaultBlockTraversalHandler.Builder().destroyBlockPredicate((event) -> event.blockState().is(Tags.SUCKABLE_FLUID))));
 
     public static void init() {
         ITEMS.register();
