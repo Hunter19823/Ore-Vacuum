@@ -39,6 +39,35 @@ public class BlockCalculations {
         return output;
     }
 
+    public static Vector3i[] calculateRectangleBase(int length, int width, int height) {
+        var positions = new ArrayList<Vector3i>();
+        // Make sure the length and width are centered around 0,0
+        length = length / 2;
+        width = width / 2;
+        positions.add(new Vector3i(0, -height, 0));
+        for (int x = 1; x <= length; x++) {
+            positions.add(new Vector3i(x, -height, 0));
+            positions.add(new Vector3i(-x, -height, 0));
+        }
+        for (int z = 1; z <= width; z++) {
+            positions.add(new Vector3i(0, -height, z));
+            positions.add(new Vector3i(0, -height, -z));
+        }
+
+        for (int x = 1; x <= length; x++) {
+            for (int z = 1; z <= width; z++) {
+                positions.add(new Vector3i(x, -height, z));
+                positions.add(new Vector3i(-x, -height, z));
+                positions.add(new Vector3i(x, -height, -z));
+                positions.add(new Vector3i(-x, -height, -z));
+            }
+        }
+
+        var output = positions.toArray(new Vector3i[0]);
+        positions.clear();
+        return output;
+    }
+
     public static Stream<BlockPos> projectPoints(int pitch, int yaw, int distanceFromOffset, Vector3i offset, Vector3i[] points) {
         var rotationMatrix = new Matrix3d();
         rotationMatrix.rotateX(0);

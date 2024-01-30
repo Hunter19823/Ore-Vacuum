@@ -16,4 +16,13 @@ public class Shapes {
         layers.trimToSize();
         return layers;
     }
+
+    public static List<Vector3i[]> createRectangle(int length, int width, int height) {
+        ArrayList<Vector3i[]> layers = new ArrayList<>();
+        for (int i = 0; i < height; i++) {
+            layers.add(BlockCalculations.calculateRectangleBase(length, width, i));
+        }
+        layers.trimToSize();
+        return layers;
+    }
 }
