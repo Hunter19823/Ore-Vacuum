@@ -1,3 +1,5 @@
 {
-    "item.orevacuum.ore_vacuum": "Ore Vacuum"
+    "item.orevacuum.ore_vacuum": "Ore Vacuum",
+    "item.orevacuum.tree_vacuum": "Tree Vacuum",
+    "item.orevacuum.plant_vacuum": "Plant Vacuum"
 }
