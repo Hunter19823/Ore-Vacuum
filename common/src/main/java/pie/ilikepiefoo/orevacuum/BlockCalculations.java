@@ -10,39 +10,28 @@ import org.joml.Vector3d;
 import org.joml.Vector3i;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class BlockCalculations {
     private static final Logger LOG = LogManager.getLogger();
 
-    public static List<Vector3i[]> createPyramid(int height) {
-        ArrayList<Vector3i[]> pyramid = new ArrayList<>();
-        for (int i = 0; i < height; i++) {
-            pyramid.add(calculatePyramidBase(i));
-        }
-        pyramid.trimToSize();
-        return pyramid;
-    }
-
     public static Vector3i[] calculatePyramidBase(int range) {
         var positions = new ArrayList<Vector3i>();
-        int index = 0;
-        positions.add(new Vector3i(0, 0, 0));
+        positions.add(new Vector3i(0, -range, 0));
         for (int x = 1; x < range; x++) {
-            positions.add(new Vector3i(x, 0, 0));
-            positions.add(new Vector3i(-x, 0, 0));
+            positions.add(new Vector3i(x, -range, 0));
+            positions.add(new Vector3i(-x, -range, 0));
         }
         for (int z = 1; z < range; z++) {
-            positions.add(new Vector3i(0, 0, z));
-            positions.add(new Vector3i(0, 0, -z));
+            positions.add(new Vector3i(0, -range, z));
+            positions.add(new Vector3i(0, -range, -z));
         }
         for (int x = 1; x < range; x++) {
             for (int z = 1; z < range; z++) {
-                positions.add(new Vector3i(x, 0, z));
-                positions.add(new Vector3i(-x, 0, z));
-                positions.add(new Vector3i(x, 0, -z));
-                positions.add(new Vector3i(-x, 0, -z));
+                positions.add(new Vector3i(x, -range, z));
+                positions.add(new Vector3i(-x, -range, z));
+                positions.add(new Vector3i(x, -range, -z));
+                positions.add(new Vector3i(-x, -range, -z));
             }
         }
         var output = positions.toArray(new Vector3i[0]);
@@ -58,7 +47,7 @@ public class BlockCalculations {
 
         return Stream.of(points).map(vec3i -> {
             var transform = rotationMatrix
-                .transform(new Vector3d(vec3i.x, -distanceFromOffset, vec3i.z))
+                .transform(new Vector3d(vec3i.x, vec3i.y - distanceFromOffset, vec3i.z))
                 .add(offset.x, offset.y, offset.z)
                 .round();
             return new BlockPos((int) transform.x, (int) transform.y, (int) transform.z);
